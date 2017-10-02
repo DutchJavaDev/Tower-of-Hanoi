@@ -1,6 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Tower_of_Hanoi.Source;
 
 namespace Tower_of_Hanoi
 {
@@ -9,13 +11,17 @@ namespace Tower_of_Hanoi
     /// </summary>
     public class Game1 : Game
     {
-        GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+        private readonly GraphicsDeviceManager _graphics;
+        private SpriteBatch _spriteBatch;
+        private SpriteFont _font;
         
+        private HanoiBoard _hanoiBoard;
+
         public Game1()
         {
-            graphics = new GraphicsDeviceManager(this);
+            _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+            
         }
 
         /// <summary>
@@ -26,8 +32,8 @@ namespace Tower_of_Hanoi
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
-
+            IsMouseVisible = true;
+            Mouse.SetCursor(MouseCursor.Hand);
             base.Initialize();
         }
 
@@ -38,9 +44,20 @@ namespace Tower_of_Hanoi
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new SpriteBatch(GraphicsDevice);
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // TODO: use this.Content to load your game content here
+            _font = Content.Load<SpriteFont>("TextFont");
+           
+            IReadOnlyList<Texture2D> texture2Ds = new List<Texture2D>
+            {
+                Content.Load<Texture2D>("Tower"),
+                Content.Load<Texture2D>("TopDisk"),
+                Content.Load<Texture2D>("SmallDisk"),
+                Content.Load<Texture2D>("MediumDisk"),
+                Content.Load<Texture2D>("BigDisk")
+            };
+            
+            _hanoiBoard = new HanoiBoard(texture2Ds,_graphics);
         }
 
         /// <summary>
@@ -49,7 +66,7 @@ namespace Tower_of_Hanoi
         /// </summary>
         protected override void UnloadContent()
         {
-            // TODO: Unload any non ContentManager content here
+            Content.Unload();
         }
 
         /// <summary>
@@ -61,10 +78,9 @@ namespace Tower_of_Hanoi
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-
-            // TODO: Add your update logic here
-
+            
             base.Update(gameTime);
+            _hanoiBoard.UpdateHanoi(Mouse.GetState());
         }
 
         /// <summary>
@@ -74,10 +90,9 @@ namespace Tower_of_Hanoi
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            // TODO: Add your drawing code here
-
             base.Draw(gameTime);
+            _hanoiBoard.RenderHanoi(_spriteBatch,_font);
         }
+
     }
 }
