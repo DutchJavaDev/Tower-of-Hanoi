@@ -8,25 +8,35 @@ namespace Tower_of_Hanoi.Source
 {
     public class HanoiBoard
     {
+        private readonly AiSolver _aiSolver;
         private readonly HanoiTower[] _hanoiTowers;
-        private readonly int _diskSteps;
+        private readonly string _stepMessage;
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+        private readonly GraphicsDevice _graphicsDevice;
+        private readonly Viewport _defaultViewport;
 
         internal HanoiDisk FocusHanoiDisk;
         internal HanoiTower FocusHanoiTower;
+        public int MovesMade;
 
         public HanoiBoard(IReadOnlyList<Texture2D> texture2Ds,IGraphicsDeviceService graphics)
         {
-            _diskSteps = GetMinimalMoves(texture2Ds.Count - 1);
+            _stepMessage = $@"Can be completed in {GetMinimalMoves(texture2Ds.Count-1)} moves.";
+            _graphicsDevice = graphics.GraphicsDevice;
+            _defaultViewport = _graphicsDevice.Viewport;
             
-            var xPos = graphics.GraphicsDevice.Viewport.Width / 4;
-            var yPos = graphics.GraphicsDevice.Viewport.Height - texture2Ds[0].Height;
+
+            var xPos = _defaultViewport.Width / 4;
+            var yPos = _defaultViewport.Height - texture2Ds[0].Height;
             var spacing = texture2Ds[3].Width / 4;
+
 
             // 0 = tower
             // 1 = topdisk
             // 2 = smalldisk
             // 3 = mediumdisk
             // 4 = bigdisk
+
 
             //Towers
             _hanoiTowers = new[]
@@ -38,43 +48,79 @@ namespace Tower_of_Hanoi.Source
                 new HanoiTower(texture2Ds[0],new Vector2(xPos * 3 + spacing,yPos),this) 
             };
 
+
             //Disks
             _hanoiTowers[0].AddDisk(new HanoiDisk(texture2Ds[4]));
             _hanoiTowers[0].AddDisk(new HanoiDisk(texture2Ds[3]));
             _hanoiTowers[0].AddDisk(new HanoiDisk(texture2Ds[2]));
             _hanoiTowers[0].AddDisk(new HanoiDisk(texture2Ds[1]));
+
+            _aiSolver = new AiSolver(_hanoiTowers,this);
         }
 
 
-        public void UpdateHanoi(MouseState mouse)
+        /// <summary>
+        /// Update's some stuff
+        /// </summary>
+        /// <param name="mouse"></param>
+        /// <param name="deltaTime"></param>
+        public void UpdateHanoi(MouseState mouse,float deltaTime)
+        {
+            AiVersion(deltaTime);
+        }
+
+
+        /// <summary>
+        /// Version for making the computer run the logic
+        /// </summary>
+        private void AiVersion(float delta)
+        {
+            _aiSolver.UpdateAi(delta);
+        }
+
+
+        /// <summary>
+        /// Game mode for the player
+        /// </summary>
+        /// <param name="mouse"></param>
+        // ReSharper disable once UnusedMember.Local
+        private void PlayerVersion(MouseState mouse)
         {
             // If a disk has been selected run this to check if the player/user has clicked on a different tower
             // If the player/user has clicked on a different tower add the selected disk to that tower and remove it from the old one
-            if ( FocusHanoiDisk != null && FocusHanoiTower != null )
+            if (FocusHanoiDisk != null && FocusHanoiTower != null)
             {
                 foreach (var tower in _hanoiTowers)
                 {
-                    if ( !tower.InBounds(mouse.X, mouse.Y) || mouse.LeftButton != ButtonState.Pressed ||
-                         FocusHanoiTower == tower ) continue;
+                    if (!tower.InBounds(mouse.X, mouse.Y) || mouse.LeftButton != ButtonState.Pressed || FocusHanoiTower == tower) continue;
+
+                    if (!tower.CanAdd(FocusHanoiDisk.Size.Width))
+                    {
+                        FocusHanoiDisk = null;
+                        FocusHanoiTower = null;
+                        break;
+                    }
 
                     var oldId = FocusHanoiDisk.IndexId;
 
                     tower.AddDisk(FocusHanoiDisk);
-                        
+
                     FocusHanoiTower.RemoveDisk(oldId);
+
+                    // Keeps track of the moves the player/user has made
+                    MovesMade++;
 
                     FocusHanoiDisk = null;
                     FocusHanoiTower = null;
-                    return;
+                    break;
                 }
             }
-            else
+
             // If no disk has been selected update the towers to check if the player/user has clicked on a disk
             foreach (var tower in _hanoiTowers)
             {
                 tower.UpdateTower(mouse);
             }
-
         }
 
 
@@ -82,16 +128,36 @@ namespace Tower_of_Hanoi.Source
         /// Renders some stuff
         /// </summary>
         /// <param name="batch"></param>
-        /// <param name="font"></param>
-        public void RenderHanoi(SpriteBatch batch,SpriteFont font)
+        /// <param name="fonts"></param>
+        public void RenderHanoi(SpriteBatch batch,SpriteFont[] fonts)
         {
             batch.Begin();
             foreach (var tower in _hanoiTowers)
             {
-                tower.DrawTower(batch,font);
+                tower.DrawTower(batch,fonts);
             }
-            batch.DrawString(font,$@"Can be completed in {_diskSteps} moves.",new Vector2(), Color.AliceBlue);
-            batch.DrawString(font,$@"ID: {FocusHanoiDisk?.IndexId ?? -1}",new Vector2(0,24),Color.AliceBlue);
+            var stepmessageSize = fonts[0].MeasureString(_stepMessage);
+
+            batch.DrawString(fonts[0],_stepMessage,new Vector2
+            {
+                X = _defaultViewport.Width / 2f  - stepmessageSize.X / 2f,
+                Y = _defaultViewport.Height / 10f
+            }, Color.AliceBlue);
+
+            var movesMade = $@"Moves made: {MovesMade}";
+            var movesMadeSize = fonts[0].MeasureString(movesMade);
+
+            batch.DrawString(fonts[0], movesMade,new Vector2
+            {
+                X = _defaultViewport.Width / 2f - movesMadeSize.X / 2f,
+                Y = _defaultViewport.Height / 10f * 2
+            }, Color.AliceBlue);
+
+
+            // Enable on user-version for debugging
+            //batch.DrawString(fonts[1], $"ID:{FocusHanoiDisk?.IndexId ?? -1}",new Vector2(), Color.Red);
+
+            _aiSolver.RenderAi(batch,fonts[0]);
             batch.End();
         }
 

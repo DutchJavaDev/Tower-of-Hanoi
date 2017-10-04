@@ -13,7 +13,7 @@ namespace Tower_of_Hanoi
     {
         private readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        private SpriteFont _font;
+        private SpriteFont[] _spriteFonts;
         
         private HanoiBoard _hanoiBoard;
 
@@ -46,8 +46,12 @@ namespace Tower_of_Hanoi
             // Create a new SpriteBatch, which can be used to draw textures.
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            _font = Content.Load<SpriteFont>("TextFont");
-           
+            _spriteFonts = new[]
+            {
+                Content.Load<SpriteFont>("TextFont"),
+                Content.Load<SpriteFont>("Debugfont")
+            };
+            
             IReadOnlyList<Texture2D> texture2Ds = new List<Texture2D>
             {
                 Content.Load<Texture2D>("Tower"),
@@ -80,7 +84,10 @@ namespace Tower_of_Hanoi
                 Exit();
             
             base.Update(gameTime);
-            _hanoiBoard.UpdateHanoi(Mouse.GetState());
+
+            var delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
+          
+            _hanoiBoard.UpdateHanoi(Mouse.GetState(),delta);
         }
 
         /// <summary>
@@ -91,7 +98,7 @@ namespace Tower_of_Hanoi
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
             base.Draw(gameTime);
-            _hanoiBoard.RenderHanoi(_spriteBatch,_font);
+            _hanoiBoard.RenderHanoi(_spriteBatch,_spriteFonts);
         }
 
     }

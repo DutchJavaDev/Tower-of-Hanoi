@@ -13,6 +13,9 @@ namespace Tower_of_Hanoi.Source
         private Vector2 _position;
         private HanoiTower _parenTower;
 
+        private string _indexString;
+        private Vector2 _indexVector;
+
 
         public HanoiDisk(Texture2D texture)
         {
@@ -30,14 +33,9 @@ namespace Tower_of_Hanoi.Source
         /// <param name="leftClick"></param>
         public void CheckBounds(int mouseX,int mouseY,bool leftClick)
         {
-            var x = _position.X;
-            var y = _position.Y;
-            var width = Size.Width;
-            var height = Size.Height;
-
             // If the mouse is inside the region/bounds of this disk && left mouse button is down do some somthing
-            if ( !(mouseX >= x) || !(mouseX <= x + width) ) return;
-            if ( !(mouseY >= y) || !(mouseY <= y + height) ) return;
+            if ( !(mouseX >= _position.X) || !(mouseX <= _position.X + Size.Width) ) return;
+            if ( !(mouseY >= _position.Y) || !(mouseY <= _position.Y + Size.Height) ) return;
 
             if ( leftClick && _parenTower.CanMove(IndexId))
             {
@@ -55,6 +53,8 @@ namespace Tower_of_Hanoi.Source
         {
             _position = pos;
             _parenTower = parent;
+
+            _indexString = $"{IndexId}";
         }
 
 
@@ -62,10 +62,20 @@ namespace Tower_of_Hanoi.Source
         /// Draws some stuff
         /// </summary>
         /// <param name="batch"></param>
-        public void RenderDisk(SpriteBatch batch,SpriteFont font)
+        /// <param name="fonts"></param>
+        public void RenderDisk(SpriteBatch batch,SpriteFont[] fonts)
         {
            batch.Draw(_diskTexture,_position,Size,Color.AliceBlue);
-           batch.DrawString(font,$@"{IndexId}",_position,Color.Beige);
+
+
+            // For debugging
+            var size = fonts[1].MeasureString(_indexString);
+            _indexVector = new Vector2
+            {
+                X = _position.X + Size.Width / 2f - size.X / 2f,
+                Y = _position.Y + Size.Height / 2f - size.Y / 2f
+            };
+           batch.DrawString(fonts[1],_indexString,_indexVector, Color.DarkRed);
         }
 
     }

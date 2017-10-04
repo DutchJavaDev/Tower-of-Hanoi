@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Linq;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -12,7 +13,9 @@ namespace Tower_of_Hanoi.Source
 
         private Rectangle Size { get;}
         private Vector2 Position { get;}
-        
+
+        public int DiskCount => _hanoiDisks.Count(disk => disk != null);
+        public string Id;
 
         public HanoiTower(Texture2D texture,Vector2 pos,HanoiBoard board)
         {
@@ -72,6 +75,7 @@ namespace Tower_of_Hanoi.Source
             _hanoiBoard.FocusHanoiTower = this;
         }
 
+
         /// <summary>
         /// Updates the child disk located in this tower
         /// </summary>
@@ -89,15 +93,17 @@ namespace Tower_of_Hanoi.Source
         /// Renders some stuff
         /// </summary>
         /// <param name="batch"></param>
-        /// <param name="font"></param>
-        public void DrawTower(SpriteBatch batch,SpriteFont font)
+        /// <param name="fonts"></param>
+        public void DrawTower(SpriteBatch batch,SpriteFont[] fonts)
         {
             batch.Draw(_texture2D,Position,Size,Color.AliceBlue);
 
             foreach (var disk in _hanoiDisks)
             {
-                disk?.RenderDisk(batch,font);
+                disk?.RenderDisk(batch,fonts);
             }
+
+            batch.DrawString(fonts[0],Id,Position,Color.Blue);
         }
 
 
@@ -129,6 +135,7 @@ namespace Tower_of_Hanoi.Source
                     break;
 
                 case 3:
+                    // This is th top most disk
                     return true;
 
                 default:
@@ -139,7 +146,33 @@ namespace Tower_of_Hanoi.Source
         }
 
         /// <summary>
-        /// Gets a positon in wich the disk can be located
+        /// Checks if there is a small disk located on the tower 
+        /// <para>If there is a small disk then it returns false</para>
+        /// </summary>
+        /// <param name="width"></param>
+        /// <returns></returns>
+        public bool CanAdd(int width)
+        {
+            // if 0 = null return true bebause there are no items in the array
+            if ( _hanoiDisks[0] == null ) return true;
+
+            for (var index = 0; index < _hanoiDisks.Length; index++)
+            {
+                if ( _hanoiDisks[index] != null ) continue;
+
+                var topdisk = _hanoiDisks[index - 1];
+
+                var topdiskWidth = topdisk.Size.Width;
+                
+                return topdiskWidth > width;
+            }
+
+            return false;
+        }
+
+
+        /// <summary>
+        /// Gets a positon in wich the disk can be placed
         /// </summary>
         /// <param name="disk"></param>
         /// <returns></returns>
@@ -183,6 +216,20 @@ namespace Tower_of_Hanoi.Source
             }
 
             return pos;
+        }
+
+
+        /// <summary>
+        /// Returns the disk that is located at the top
+        /// </summary>
+        /// <returns></returns>
+        public HanoiDisk GetTopDisk()
+        {
+            for (var index = _hanoiDisks.Length; index > 0; index--)
+            {
+                if ( _hanoiDisks[index-1] != null ) return _hanoiDisks[index-1];
+            }
+            return null;
         }
 
     }
