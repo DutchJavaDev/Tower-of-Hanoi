@@ -184,6 +184,7 @@ namespace Tower_of_Hanoi.Source
             // 1 = 2/4 i am not stupid, but i cant figure a word for this location: bottom-center? 
             // 2 = 3/4 i am not stupid, but i cant figure a word for this location: top-center?
             // 3 = 4/4 top
+
             var pos = new Vector2();
 
             switch (disk.IndexId)
