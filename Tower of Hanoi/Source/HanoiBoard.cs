@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Policy;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -10,24 +11,26 @@ namespace Tower_of_Hanoi.Source
     {
         private readonly AiSolver _aiSolver;
         private readonly HanoiTower[] _hanoiTowers;
-        private readonly string _stepMessage;
+        public string StepMessage;
         // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly GraphicsDevice _graphicsDevice;
-        private readonly Viewport _defaultViewport;
+        public readonly Viewport DefaultViewport;
 
         internal HanoiDisk FocusHanoiDisk;
         internal HanoiTower FocusHanoiTower;
+
         public int MovesMade;
 
         public HanoiBoard(IReadOnlyList<Texture2D> texture2Ds,IGraphicsDeviceService graphics)
         {
-            _stepMessage = $@"Can be completed in {GetMinimalMoves(texture2Ds.Count-1)} moves.";
+            StepMessage = $@"Can be completed in {GetMinimalMoves(texture2Ds.Count-1)} moves.";
             _graphicsDevice = graphics.GraphicsDevice;
-            _defaultViewport = _graphicsDevice.Viewport;
+            DefaultViewport = _graphicsDevice.Viewport;
             
 
-            var xPos = _defaultViewport.Width / 4;
-            var yPos = _defaultViewport.Height - texture2Ds[0].Height;
+            // Tower placing
+            var xPos = DefaultViewport.Width / 4;
+            var yPos = DefaultViewport.Height - texture2Ds[0].Height;
             var spacing = texture2Ds[3].Width / 4;
 
 
@@ -136,12 +139,12 @@ namespace Tower_of_Hanoi.Source
             {
                 tower.DrawTower(batch,fonts);
             }
-            var stepmessageSize = fonts[0].MeasureString(_stepMessage);
+            var stepmessageSize = fonts[0].MeasureString(StepMessage);
 
-            batch.DrawString(fonts[0],_stepMessage,new Vector2
+            batch.DrawString(fonts[0],StepMessage,new Vector2
             {
-                X = _defaultViewport.Width / 2f  - stepmessageSize.X / 2f,
-                Y = _defaultViewport.Height / 10f
+                X = DefaultViewport.Width / 2f  - stepmessageSize.X / 2f,
+                Y = DefaultViewport.Height / 10f
             }, Color.AliceBlue);
 
             var movesMade = $@"Moves made: {MovesMade}";
@@ -149,8 +152,8 @@ namespace Tower_of_Hanoi.Source
 
             batch.DrawString(fonts[0], movesMade,new Vector2
             {
-                X = _defaultViewport.Width / 2f - movesMadeSize.X / 2f,
-                Y = _defaultViewport.Height / 10f * 2
+                X = DefaultViewport.Width / 2f - movesMadeSize.X / 2f,
+                Y = DefaultViewport.Height / 10f * 2
             }, Color.AliceBlue);
 
 
@@ -167,7 +170,7 @@ namespace Tower_of_Hanoi.Source
         /// </summary>
         /// <param name="disks"></param>
         /// <returns></returns>
-        private static int GetMinimalMoves(int disks)
+        public static int GetMinimalMoves(int disks)
         {
             return (int)Math.Pow(2.0, disks) - 1;
         }
